@@ -1,13 +1,14 @@
-import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { Providers } from '@/lib/providers';
+import './globals.css';
+import {Providers} from '@/lib/providers';
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Meeting Scheduler',
-  description: 'Schedule meetings with Google Meet integration',
+  description: 'Schedule and manage your meetings easily',
 };
 
 export default function RootLayout({
@@ -18,7 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster richColors position="top-center" />
+        </Providers>
       </body>
     </html>
   );

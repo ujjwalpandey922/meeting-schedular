@@ -11,7 +11,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addMeeting } from '@/lib/store/meetingsSlice';
 import { RootState } from '@/lib/store/store';
 import { Video, Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isSameDay, isAfter, set } from 'date-fns';
+import { toast } from 'sonner';
 
 const generateMeetingCode = () => {
   // Google Meet codes are typically 3 groups of 4 lowercase letters
@@ -45,25 +46,52 @@ export function MeetingDashboard() {
         isInstant: true,
       })
     );
+    toast.success('Instant meeting created successfully!', {
+      description: 'Click the link to join the meeting.',
+    });
   };
 
   const createScheduledMeeting = () => {
-    if (!date || !time) return;
+    if (!date || !time) {
+      toast.error('Please select both date and time');
+      return;
+    }
+
+    const now = new Date();
+    const [hours, minutes] = time.split(':').map(Number);
+    const selectedDateTime = set(new Date(date), { hours, minutes });
+
+    // If selected date is today, check if time is in the past
+    if (isSameDay(selectedDateTime, now) && isAfter(now, selectedDateTime)) {
+      toast.error('Cannot schedule a meeting in the past');
+      return;
+    }
 
     const meetingCode = generateMeetingCode();
-    const startTime = new Date(date);
-    const [hours, minutes] = time.split(':');
-    startTime.setHours(parseInt(hours), parseInt(minutes));
-
     dispatch(
       addMeeting({
         id: meetingCode,
         title: 'Scheduled Meeting',
-        startTime: startTime.toISOString(),
+        startTime: selectedDateTime.toISOString(),
         meetLink: `https://meet.google.com/${meetingCode}`,
         isInstant: false,
       })
     );
+    toast.success('Meeting scheduled successfully!', {
+      description: `Scheduled for ${format(selectedDateTime, 'PPp')}`,
+    });
+  };
+
+  // Function to get minimum time for the time input
+  const getMinTime = () => {
+    if (!date) return '00:00';
+    const now = new Date();
+    if (isSameDay(date, now)) {
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+    return '00:00';
   };
 
   if (!session) {
@@ -111,7 +139,7 @@ export function MeetingDashboard() {
                 <Input
                   type="time"
                   value={time}
-                  min={new Date().toISOString().slice(11, 16)}
+                  min={getMinTime()}
                   onChange={(e) => setTime(e.target.value)}
                   className="w-full"
                 />
