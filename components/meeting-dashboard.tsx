@@ -13,6 +13,20 @@ import { RootState } from '@/lib/store/store';
 import { Video, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
+const generateMeetingCode = () => {
+  // Google Meet codes are typically 3 groups of 4 lowercase letters
+  const chars = 'abcdefghijklmnopqrstuvwxyz';
+  const groups = Array(3)
+    .fill(0)
+    .map(() =>
+      Array(4)
+        .fill(0)
+        .map(() => chars[Math.floor(Math.random() * chars.length)])
+        .join('')
+    );
+  return groups.join('-');
+};
+
 export function MeetingDashboard() {
   const { data: session } = useSession();
   const dispatch = useDispatch();
@@ -21,13 +35,13 @@ export function MeetingDashboard() {
   const [time, setTime] = useState('');
 
   const createInstantMeeting = () => {
-    const meetingId = Math.random().toString(36).substring(7);
+    const meetingCode = generateMeetingCode();
     dispatch(
       addMeeting({
-        id: meetingId,
+        id: meetingCode,
         title: 'Instant Meeting',
         startTime: new Date().toISOString(),
-        meetLink: `https://meet.google.com/${meetingId}`,
+        meetLink: `https://meet.google.com/${meetingCode}`,
         isInstant: true,
       })
     );
@@ -35,18 +49,18 @@ export function MeetingDashboard() {
 
   const createScheduledMeeting = () => {
     if (!date || !time) return;
-    
-    const meetingId = Math.random().toString(36).substring(7);
+
+    const meetingCode = generateMeetingCode();
     const startTime = new Date(date);
     const [hours, minutes] = time.split(':');
     startTime.setHours(parseInt(hours), parseInt(minutes));
 
     dispatch(
       addMeeting({
-        id: meetingId,
+        id: meetingCode,
         title: 'Scheduled Meeting',
         startTime: startTime.toISOString(),
-        meetLink: `https://meet.google.com/${meetingId}`,
+        meetLink: `https://meet.google.com/${meetingCode}`,
         isInstant: false,
       })
     );
@@ -57,8 +71,8 @@ export function MeetingDashboard() {
   }
 
   return (
-    <div className="w-full max-w-4xl space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="w-full max-w-4xl space-y-8 px-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -81,22 +95,27 @@ export function MeetingDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Date</Label>
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="rounded-md border"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Time</Label>
-              <Input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-              />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="w-full">
+                <Label>Date</Label>
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  className="rounded-md border w-full p-2"
+                  fromDate={new Date()}
+                />
+              </div>
+              <div className="w-full">
+                <Label>Time</Label>
+                <Input
+                  type="time"
+                  value={time}
+                  min={new Date().toISOString().slice(11, 16)}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="w-full"
+                />
+              </div>
             </div>
             <Button onClick={createScheduledMeeting} className="w-full">
               Schedule Meeting
@@ -116,10 +135,10 @@ export function MeetingDashboard() {
                 key={meeting.id}
                 className="flex flex-col space-y-2 p-4 border rounded-lg"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row justify-between">
                   <h3 className="font-semibold">{meeting.title}</h3>
-                  <span className="text-sm text-muted-foreground">
-                    {format(new Date(meeting.startTime), "PPp")}
+                  <span className="text-sm text-gray-600">
+                    {format(new Date(meeting.startTime), 'PPp')}
                   </span>
                 </div>
                 <a
@@ -133,7 +152,7 @@ export function MeetingDashboard() {
               </div>
             ))}
             {meetings.length === 0 && (
-              <p className="text-center text-muted-foreground">
+              <p className="text-center text-gray-500">
                 No meetings scheduled yet
               </p>
             )}
