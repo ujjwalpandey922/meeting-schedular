@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface Meeting {
+export interface Meeting {
   id: string;
   title: string;
   startTime: string;
@@ -27,4 +27,5 @@ export const meetingsSlice = createSlice({
 });
 
 export const { addMeeting } = meetingsSlice.actions;
+
 export default meetingsSlice.reducer;
