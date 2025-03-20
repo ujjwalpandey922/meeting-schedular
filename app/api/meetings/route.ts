@@ -5,7 +5,7 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '../auth/[...nextauth]/config';
 
 /**
  * POST endpoint to create a new meeting in the user's Google Calendar
